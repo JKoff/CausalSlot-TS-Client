@@ -1,19 +1,22 @@
 import CausalSlotClient from '../src/index';
 
+function init() {
+    return new CausalSlotClient<State>({
+        host: (document.querySelector('#host') as HTMLInputElement).value,
+        address: (document.querySelector('#address') as HTMLInputElement).value,
+        initialState: { items: [] },
+        mergeFn: (lhs: State, rhs: State): State => {
+            const lhsSet = new Set(lhs.items || []);
+            (rhs.items || []).forEach(item => lhsSet.add(item));
+            return { items: Array.from(lhsSet) };
+        }
+    });
+}
+let csClient = init();
+
 type State = {
     items: string[];  // Append-only set
 };
-
-const csClient = new CausalSlotClient<State>({
-    host: (document.querySelector('#host') as HTMLInputElement).value,
-    address: (document.querySelector('#address') as HTMLInputElement).value,
-    initialState: { items: [] },
-    mergeFn: (lhs: State, rhs: State): State => {
-        const lhsSet = new Set(lhs.items || []);
-        (rhs.items || []).forEach(item => lhsSet.add(item));
-        return { items: Array.from(lhsSet) };
-    }
-});
 
 function render() {
     const newLink = document.createElement('a');
@@ -57,3 +60,9 @@ function render() {
 }
 
 csClient.checkForUpdates().then(render);
+
+document.querySelector('#refresh').addEventListener('click', async e => {
+    e.preventDefault();
+    csClient = init();
+    csClient.checkForUpdates().then(render);
+});
