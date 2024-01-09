@@ -7,7 +7,6 @@ type State = {
 const csClient = new CausalSlotClient<State>({
     host: (document.querySelector('#host') as HTMLInputElement).value,
     address: (document.querySelector('#address') as HTMLInputElement).value,
-    password: (document.querySelector('#password') as HTMLInputElement).value,
     initialState: { items: [] },
     mergeFn: (lhs: State, rhs: State): State => {
         const lhsSet = new Set(lhs.items || []);

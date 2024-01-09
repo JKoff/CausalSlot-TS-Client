@@ -6,7 +6,6 @@ type MergeFn<T> = (lhs: T, rhs: T) => T;
 type Options<DurableStateT> = {
     host: string;
     address: string;
-    password: string;
     initialState: DurableStateT;
     mergeFn: MergeFn<DurableStateT>;
 };
@@ -15,7 +14,6 @@ export default class CausalSlotClient<DurableStateT> {
     constructor(opt: Options<DurableStateT>) {
         this.#host = opt.host;
         this.#address = opt.address;
-        this.#password = opt.password;
 
         this.#versions = new Set;
         this.#state = opt.initialState;
@@ -39,10 +37,11 @@ export default class CausalSlotClient<DurableStateT> {
     private async write(state: DurableStateT) {
         const versions = Array.from(this.#versions);
         const writePayload = JSON.stringify(state);
+        const encoded = new TextEncoder().encode(writePayload);
         const writeResponse = await fetch(`${this.#host}/address/${this.#address}`, {
             method: 'POST',
             mode: 'cors',
-            body: makeRequestBody(versions, new TextEncoder().encode(writePayload)),
+            body: makeRequestBody(versions, encoded),
         });
 
         if (writeResponse.status !== 200) {
@@ -74,7 +73,6 @@ export default class CausalSlotClient<DurableStateT> {
 
     #host: string;
     #address: string;
-    #password: string;
 
     #versions: Set<BigInt>;
     #state: DurableStateT;
